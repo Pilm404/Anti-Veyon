@@ -33,8 +33,7 @@ This program is designed to detect and manage connections made by the Veyon Mast
    - **Disable/Restart Veyon Master**: Allows disabling or restarting the Veyon Master service (only if the program is run with administrator privileges and the service is running).
    - **Exit**: Close the program.
 
-## Purpose
-This program provides tools to detect and manage connections made by the Veyon Master application, offering administrators a way to monitor and control its operation.
+
 
 ## Disclaimer
 Administrator privileges are required for some functionality. Ensure you have the appropriate permissions before use.
