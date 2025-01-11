@@ -30,10 +30,7 @@ This program is designed to detect and manage connections made by the Veyon Mast
 
 2. Right-clicking the red square opens a menu with the following options:
    - **Status**: View the current status of Veyon Master.
-   - **Disable/Restart Veyon Master**: Allows disabling or restarting the Veyon Master service (only if the program is run with administrator privileges and the service is running).
+   - **Disable/Restart Veyon Master**: Allows disabling or restarting the Veyon Master service (only if the program is run with administrator privileges).
    - **Exit**: Close the program.
 
 
-
-## Disclaimer
-Administrator privileges are required for some functionality. Ensure you have the appropriate permissions before use.
