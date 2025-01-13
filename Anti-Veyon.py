@@ -1,5 +1,6 @@
 from pystray import Icon, Menu, MenuItem
 from PIL import Image, ImageDraw
+import socket
 import threading
 import time
 import psutil
@@ -12,7 +13,6 @@ ports = [11100, 11200, 11300]
 app_name = "Anti Veyon Guard"
 service_name = "VeyonService"
 active_connections = []
-notification_type = None  # None, 'connected', 'disconnected'
 stop_flag = threading.Event()
 
 def show_md(message, icon=0x40):
@@ -41,37 +41,32 @@ def stop_service():
     else:
         threading.Thread(target=show_md, args=("To perform this action, please restart the program as administrator to continue.", 0x10,)).start()
 
-def find_processes_by_port(port):
-    processes_info = []
+def status_check():
+    res = []
+    for ip in list(set(active_connections)):
+        ip = socket.gethostbyaddr(ip)[0]
+        res.append(ip)
+    return res
 
-    for conn in psutil.net_connections(kind="inet"):
-        if conn.laddr.port == port:
-            pid = conn.pid
-            if pid:
-                try:
-                    process = psutil.Process(pid)
-                    process_name = process.name()
-                    ip = conn.laddr.ip
-                    processes_info.append((process_name, pid, ip))
-                except psutil.NoSuchProcess:
-                    continue
+def find_service():
+    global active_connections
+    last_connection = active_connections
+    while not stop_flag.is_set():
+        if last_connection != active_connections:
+            threading.Thread(target=show_md, args=("Detected conection",)).start()
+            last_connection = active_connections
 
-    return processes_info
+    time.sleep(1)
 
 def main():
-    global notification_type
+    global active_connections
+    threading.Thread(target=find_service).start()
     while not stop_flag.is_set():
-        connections_status = [find_processes_by_port(port) for port in ports]
-        has_connections = any(connections_status)
-
-        if has_connections and notification_type != 'connected':
-            threading.Thread(target=show_md, args=("Detected connection.",0x30,)).start()
-            notification_type = 'connected'
-
-        elif not has_connections and notification_type != 'disconnected':
-            threading.Thread(target=show_md, args=("Host terminated the session.",)).start()
-            notification_type = 'disconnected'
-
+        temp_connetions = []
+        for conn in psutil.net_connections(kind="tcp"):
+            if conn.status == "ESTABLISHED" and conn.laddr.port in ports:
+                temp_connetions.append(conn.laddr.ip)
+        active_connections = temp_connetions
         time.sleep(1)
 
 class iconControl:
@@ -83,7 +78,7 @@ class iconControl:
 
     def status(self):
         is_admin = ctypes.windll.shell32.IsUserAnAdmin()
-        threading.Thread(target=show_md, args=(f"Status:\nThe program is running as administrator: {'yes' if is_admin else 'no'} \nIs the host connected: {'yes' if notification_type == 'connected' else 'no'}",)).start()
+        threading.Thread(target=show_md, args=(f"Status:\nThe program is running as administrator: {'yes' if is_admin else 'no'} \nActive connections {status_check()}",)).start()
 
     def exit_app(self, icon, item):
         global main_thread
